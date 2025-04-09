@@ -1,0 +1,13 @@
+name: spateGAN_era5
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13.2
+  - pip
+  - numpy
+  - xarray
+  - netcdf4
+  - einops
+  - matplotlib
+  - pip:
+    - torch==2.6.0
