@@ -27,6 +27,7 @@ cd spate-gan
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
 
 ## Getting Started
 ### Example: Downscaling Over Germany
