@@ -56,11 +56,11 @@ The content of this repository is released under the terms of the MIT license.
 
 Please consider citing if you use spateGAN-ERA5:
 
-<pre> ```bibtex 
+<pre>
 @misc{glawion_global_2024,
 	title = {Global spatio-temporal downscaling of {ERA5} precipitation through generative {AI}},
 	doi = {10.48550/arXiv.2411.16098},
 	author = {Glawion, Luca and Polz, Julius and Kunstmann, Harald and Fersch, Benjamin and Chwala, Christian},
 	year = {2024},
 }
-``` </pre>
+</pre>
