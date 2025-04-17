@@ -24,9 +24,9 @@
 ```bash
 git clone 
 cd spate-gan
-mamba env create -f env.yaml
+mamba env create -f environment.yaml
 or
-conda env create -f env.yaml
+conda env create -f environment.yaml
 ```
 
 #### Example: Downscaling Over Germany
