@@ -18,18 +18,17 @@
 
 ---
 
-### Installation
+### Getting Started
+#### Installation
 
 ```bash
-tbd:
 git clone 
 cd spate-gan
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+mamba env create -f env.yaml
+or
+conda env create -f env.yaml
 ```
 
-### Getting Started
 #### Example: Downscaling Over Germany
 
 A demonstration notebook is included in the repo:
@@ -42,7 +41,7 @@ The notebook includes:
 
 - Running the pre-trained spateGAN-ERA5 model
 
-- Visualizing high-resolution rain fields
+- Visualizing and comparison of high-resolution rain field predictions to rainfall observations
 
 
 
