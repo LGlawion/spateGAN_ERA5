@@ -23,7 +23,7 @@
 
 ```bash
 git clone 
-cd spate-gan
+cd spateGAN_ERA5
 mamba env create -f environment.yaml
 or
 conda env create -f environment.yaml
