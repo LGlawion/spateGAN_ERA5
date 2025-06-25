@@ -49,7 +49,7 @@ The content of this repository is released under the terms of the MIT license.
 
 Consider citing if you use spateGAN-ERA5:
 <pre>
-@article{glawion_global_2025,
+@article{spateGAN_era5_2025,
 	title = {Global spatio-temporal {ERA5} precipitation downscaling to km and sub-hourly scale using generative {AI}},
 	doi = {10.1038/s41612-025-01103-y},
 	journal = {npj Climate and Atmospheric Science},
