@@ -1,6 +1,6 @@
 ## spateGAN_ERA5
 
-**spateGAN-ERA5** is a deep learning framework designed for the spatio-temporal downscaling of ERA5 precipitation data. Utilizing a probabilistic conditional Generative Adversarial Networks (cGANs), it enhances the resolution of ERA5 data from 24 km and 1-hour intervals to 2 km and 10-minute intervals. This advancement enables high-resolution rainfall fields with realistic spatio-temporal patterns and accurate rain rate distributions, including extreme events.
+**spateGAN-ERA5** is a deep learning framework designed for the spatio-temporal downscaling of ERA5 precipitation data. Utilizing a probabilistic conditional Generative Adversarial Networks (cGANs), it enhances the resolution of ERA5 data from 24 km and 1-hour intervals to 2 km and 10-minute intervals. This advancement enables high-resolution rainfall fields with realistic spatio-temporal patterns and accurate rain rate distributions, including extreme events. (https://www.nature.com/articles/s41612-025-01103-y)
 
 
 ---
@@ -43,21 +43,17 @@ The notebook includes:
 
 
 
-### Links
-
-Paper on arXiv: https://arxiv.org/abs/2411.16098
-
 ### License and co
 
 The content of this repository is released under the terms of the MIT license.
 
-Please consider citing if you use spateGAN-ERA5:
-
+Consider citing if you use spateGAN-ERA5:
 <pre>
-@misc{glawion_global_2024,
-	title = {Global spatio-temporal downscaling of {ERA5} precipitation through generative {AI}},
-	doi = {10.48550/arXiv.2411.16098},
+@article{glawion_global_2025,
+	title = {Global spatio-temporal {ERA5} precipitation downscaling to km and sub-hourly scale using generative {AI}},
+	doi = {10.1038/s41612-025-01103-y},
+	journal = {npj Climate and Atmospheric Science},
 	author = {Glawion, Luca and Polz, Julius and Kunstmann, Harald and Fersch, Benjamin and Chwala, Christian},
-	year = {2024},
+	year = {2025},
 }
 </pre>
