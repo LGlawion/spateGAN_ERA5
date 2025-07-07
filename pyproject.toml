@@ -14,6 +14,7 @@ dependencies = [
     'einops',
     'matplotlib',
     'torch==2.6.0',
+    'ipykernel',
 ]
 
 [project.scripts]
