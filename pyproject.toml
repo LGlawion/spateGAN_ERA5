@@ -8,13 +8,13 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    'numpy',
-    'xarray',
-    'netcdf4',
-    'einops',
-    'matplotlib',
-    'torch==2.6.0',
-    'ipykernel',
+    "numpy",
+    "xarray",
+    "netcdf4",
+    "einops",
+    "matplotlib",
+    "torch==2.6.0",
+    "ipykernel",
 ]
 
 [project.scripts]

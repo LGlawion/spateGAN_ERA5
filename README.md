@@ -30,6 +30,7 @@ conda env create -f environment.yaml
 
 **uv**
 clone repo
+install uv: https://docs.astral.sh/uv/getting-started/installation/
 ```bash
 cd spateGAN_ERA5
 uv sync #creates .venv
