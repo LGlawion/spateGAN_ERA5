@@ -21,11 +21,22 @@
 ### Getting Started
 #### Installation
 
+**conda**
 ```bash
 mamba env create -f environment.yaml
 or
 conda env create -f environment.yaml
 ```
+
+**uv**
+clone repo
+install uv: https://docs.astral.sh/uv/getting-started/installation/
+```bash
+cd spateGAN_ERA5
+uv sync #creates .venv
+```
+use `spateGAN_ERA5/.venv/bin/python3` as your interpreter
+
 
 #### Example: Downscaling Over Germany
 

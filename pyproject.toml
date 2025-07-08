@@ -1,0 +1,25 @@
+[project]
+name = "spategan-era5"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "julius.polz", email = "julius.polz@kit.edu" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "numpy",
+    "xarray",
+    "netcdf4",
+    "einops",
+    "matplotlib",
+    "torch==2.6.0",
+    "ipykernel",
+]
+
+[project.scripts]
+spategan-era5 = "spategan_era5:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
