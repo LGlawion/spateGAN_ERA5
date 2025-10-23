@@ -18,6 +18,12 @@
 
 ---
 
+### Datasets
+
+Training, model selection and evaluation datasets are available at https://doi.org/10.5281/zenodo.17417589
+
+---
+
 ### Getting Started
 #### Installation
 
