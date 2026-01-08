@@ -1,19 +1,38 @@
+"""Neural network model definitions for spateGAN-ERA5.
+
+Contains the Generator model and supporting modules for
+precipitation downscaling.
+"""
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from typing import Optional
-
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 class CustomDropout(nn.Module):
-    def __init__(self, p: float, d_seed: int):
+    """Custom dropout that applies the same mask across the time dimension.
+    
+    This ensures consistent dropout patterns for temporal data.
+    
+    Args:
+        p: Dropout probability (0-1).
+        d_seed: Random seed for reproducibility.
+    """
+    
+    def __init__(self, p: float, d_seed: int) -> None:
         super().__init__()
         self.p = p
         torch.manual_seed(d_seed)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-
+        """Apply dropout with time-consistent mask.
+        
+        Args:
+            x: Input tensor of shape (batch, channels, time, height, width).
+            
+        Returns:
+            Tensor with dropout applied.
+        """
         device = x.device
         batch, channels, time, height, width = x.shape
 
@@ -25,8 +44,24 @@ class CustomDropout(nn.Module):
 
 
 class ResidualBlock3D(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, use_layer_norm: bool = True,
-                 stride: int = 1, padding_type: Optional[bool] = None):
+    """3D Residual block with optional instance normalization.
+    
+    Args:
+        in_channels: Number of input channels.
+        out_channels: Number of output channels.
+        use_layer_norm: Whether to use instance normalization.
+        stride: Convolution stride.
+        padding_type: If True, use reflection padding.
+    """
+    
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        use_layer_norm: bool = True,
+        stride: int = 1,
+        padding_type: bool | None = None,
+    ) -> None:
         super().__init__()
 
         padding = 0 if padding_type else 1
@@ -53,6 +88,14 @@ class ResidualBlock3D(nn.Module):
             self.adjust_conv = None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass through the residual block.
+        
+        Args:
+            x: Input tensor of shape (batch, channels, time, height, width).
+            
+        Returns:
+            Output tensor with residual connection applied.
+        """
         residual = x
 
         if self.padding_layer:
@@ -79,20 +122,51 @@ class ResidualBlock3D(nn.Module):
 
 
 class Interpolate(nn.Module):
-    def __init__(self, scale_factor: tuple, mode: str = 'trilinear'):
+    """Trilinear interpolation module for upsampling.
+    
+    Args:
+        scale_factor: Scaling factor for each dimension (time, height, width).
+        mode: Interpolation mode (default: 'trilinear').
+    """
+    
+    def __init__(self, scale_factor: tuple[int, int, int], mode: str = 'trilinear') -> None:
         super().__init__()
         self.scale_factor = scale_factor
         self.mode = mode
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Upsample the input tensor.
+        
+        Args:
+            x: Input tensor of shape (batch, channels, time, height, width).
+            
+        Returns:
+            Upsampled tensor.
+        """
         return F.interpolate(x, scale_factor=self.scale_factor, mode=self.mode, align_corners=False)
 
 
 class Constraint(nn.Module):
-    def __init__(self):
+    """Constraint layer to enforce ERA5 precipitation conservation.
+    
+    Scales predictions to match ERA5 total precipitation sum.
+    """
+    
+    def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, prediction, constraint):
+    def forward(
+        self, prediction: torch.Tensor, constraint: torch.Tensor
+    ) -> torch.Tensor:
+        """Apply constraint to match ERA5 totals.
+        
+        Args:
+            prediction: Model prediction tensor.
+            constraint: ERA5 constraint tensor.
+            
+        Returns:
+            Scaled prediction tensor.
+        """
         constraint = constraint[:, :, 5:-5, 8:-8, 8:-8].sum(dim=1, keepdim=True)
         scale = (constraint[:, 0].mean(dim=(1, 2, 3)) / 6).view(-1, 1, 1, 1, 1)
         pred_mean = prediction[:, 0].mean(dim=(1, 2, 3)).view(-1, 1, 1, 1, 1)
@@ -100,6 +174,14 @@ class Constraint(nn.Module):
 
 
 class Generator(nn.Module):
+    """spateGAN Generator for precipitation downscaling.
+    
+    Transforms coarse ERA5 precipitation data into high-resolution
+    precipitation fields using a residual convolutional architecture.
+    
+    Input shape: (batch, 2, 16, 28, 28) - 2 channels (CP, LSP), 16 hours, 28x28 grid
+    Output shape: (batch, 1, 48, 168, 168) - 8 hours at 10-min resolution, 168x168 grid
+    """
     def __init__(self):
         super().__init__()
 
@@ -107,6 +189,7 @@ class Generator(nn.Module):
         self._initialize_layers()
 
     def _initialize_layers(self):
+        """Initialize model layers."""
         f = self.filter_size
 
         self.input_pad = nn.ReflectionPad3d((1, 1, 1, 1, 0, 0))
@@ -144,8 +227,16 @@ class Generator(nn.Module):
 
         self.constraint_layer = Constraint()
 
-
     def forward(self, x: torch.Tensor, dropout_seed: int) -> torch.Tensor:
+        """Generate high-resolution precipitation from ERA5 input.
+        
+        Args:
+            x: Input tensor of shape (batch, 2, 16, height, width).
+            dropout_seed: Random seed for dropout consistency.
+            
+        Returns:
+            High-resolution precipitation tensor.
+        """
         x1 = self.res1(x)
         x1 = CustomDropout(p=0.2, d_seed=dropout_seed)(x1)
         x2_stay = self.res2(x1)
