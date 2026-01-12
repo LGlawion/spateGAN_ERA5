@@ -16,6 +16,9 @@
 - **Uncertainty Quantification**  
   Generates diverse ensembles of precipitation scenarios.
 
+- **User-Defined Inference**
+  Run spateGAN-ERA5 on custom regions and time periods using your own ERA5 netCDF files via a simple configuration-driven workflow.
+
 ---
 
 ### Datasets
