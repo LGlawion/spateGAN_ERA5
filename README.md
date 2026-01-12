@@ -22,9 +22,10 @@
 
 Training, model selection and evaluation datasets are available at https://doi.org/10.5281/zenodo.17417589
 
-To run the model in inference, ERA5 data in hourly resolution can be downloaded 
-<a href="[url](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=download)">here</a> as netCDF file.
-To run the model, the variables "Convective precipitation" and "Large scale precipitation", and a minimal spatial extent of 672kmx672km and a minimal time sequence of 16 hrs are required.
+To run the model for downscaling precipitation data in inference, ERA5 data in hourly resolution can be downloaded
+[here](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=download)
+as a netCDF file.
+The variables "Convective precipitation" and "Large scale precipitation", a minimal spatial extent of 672kmx672km and a minimal time sequence of 16 hrs are required.
  
 ---
 
@@ -48,7 +49,7 @@ uv sync #creates .venv
 use `spateGAN_ERA5/.venv/bin/python3` as your interpreter
 
 #### Downscaling
-Update ```config.yaml```: downscaling domain (defined as centre lat lon coordinates), input path of ERA5 netCDF and output path.
+Update ```config.yaml``` to your downscaling domain (defined as centre lat lon coordinates), input path of ERA5 netCDF and output path.
 
 Run
 ```bash
