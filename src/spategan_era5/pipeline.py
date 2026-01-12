@@ -65,7 +65,7 @@ def load_era5_data(
         end_date=end_date,
     )
     
-    logger.info("Data loaded: %d time steps, lat [%.2f, %.2f], lon [%.2f, %.2f]",
+    logger.info("Loaded %d time steps: lat [%.1f, %.1f]°, lon [%.1f, %.1f]°",
                 len(ds_era5.time),
                 float(ds_era5.lat.min()),
                 float(ds_era5.lat.max()),
@@ -127,7 +127,6 @@ def extract_patch(
     )
     
     actual_center = calculate_domain_center(ds_sliced)
-    logger.info("Patch extracted. Actual center: (%.4f°N, %.4f°E)", *actual_center)
     
     return ds_sliced, slicing_info, actual_center
 
@@ -147,8 +146,6 @@ def project_to_utm(
     Returns:
         Tuple of (high-res 336x336 dataset, low-res 28x28 dataset).
     """
-    logger.info("Projecting to UTM...")
-    
     ds_utm_336 = latlon_to_utm(
         ds, center_lat=center_lat, center_lon=center_lon,
         target_size=336, grid_spacing=2000, method="nearest",
@@ -177,10 +174,8 @@ def run_inference(
     Returns:
         Prediction dataset in UTM projection.
     """
-    logger.info("Preparing prediction output dataset...")
     ds_utm_pred = prediction_output_dataset(ds_utm_336)
     
-    logger.info("Initializing inference engine...")
     inference = ERA5DownscalingInference(
         config=config,
         device=config["processing"]["device"],
@@ -191,14 +186,13 @@ def run_inference(
         ds_utm_28, variable_names=list(ds_utm_28.data_vars)
     )
         
-    logger.info("Running sliding window prediction...")
+    logger.info("Running inference...")
     predictions = inference.predict_sliding_window(
         x_tensor,
         ds_prediction=ds_utm_pred,
         slide=config["inference"]["stride_hours"],
     )
     
-    logger.info("Inference completed")
     return predictions
 
 
@@ -223,7 +217,6 @@ def save_outputs(
     if output_latlon_dir:
         output_latlon_dir.mkdir(parents=True, exist_ok=True)
         
-        logger.info("Converting predictions to lat-lon projection...")
         predictions_latlon = utm_to_latlon(predictions_utm, resolution=0.018)
         
         filename = generate_output_filename(predictions_latlon, config, projection="latlon")
@@ -332,10 +325,8 @@ def fill_nans_if_sparse(ds: xr.Dataset, threshold=0.01) -> xr.Dataset:
 
     nan_fraction = nan_values / total_values
 
-    logger.info(f"{nan_fraction:.4f} NaN values detected in dataset")
-
     if nan_fraction < threshold and nan_fraction > 0:
-        logger.info(f"Filling Nans since below threshold of {threshold:.4f}")
+        logger.info(f"Filling {nan_fraction:.4f} NaNs (below threshold {threshold:.4f})")
         return ds.fillna(0)
     elif nan_fraction >= threshold:
         logger.info(f"Not filling Nans since above threshold of {threshold:.4f}")
@@ -379,6 +370,7 @@ def run_downscaling_pipeline(config: dict, project_root: Path) -> None:
         required_hours=16,
     )
     
+    logger.info("running UTM projection")
     
     # Stage 3: Project to UTM
     ds_utm_336, ds_utm_28 = project_to_utm(ds_sliced, *center_coords)

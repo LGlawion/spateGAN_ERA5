@@ -44,19 +44,12 @@ class ERA5DownscalingInference:
         self.seed = seed
         model_weights_path = config['data']['model_weights_path']
         self.final_era_constraint = config['inference'].get('final_era_constraint', True)        
-
-        
-        print(f"Initializing ERA5 downscaling inference")
-        print(f"  Device: {self.device}")
-        print(f"  Model weights: {model_weights_path}")
         
         # Load model
         self.model = Generator().to(self.device)
         checkpoint = torch.load(model_weights_path, weights_only=True, map_location=self.device)
         self.model.load_state_dict(checkpoint, strict=True)
         self.model.eval()
-        
-        print(f"Model loaded successfully")
     
     def prepare_tensor_dataset(
         self,
@@ -198,7 +191,10 @@ class ERA5DownscalingInference:
                 raise ValueError(f"Prediction length {result.shape[0]} does not match ds_prediction time length {len(ds_prediction.time)}")
             else:
                 ds_output = ds_prediction.copy(deep=True)
-                ds_output['precipitation'] = (['time', 'x', 'y'], result*6)
+                # Keep spatial dims consistent with UTM datasets (y northing, x easting)
+                ds_output['precipitation'] = (['time', 'y', 'x'], result*6)
+                ds_output['precipitation'].attrs['units'] = 'mm/h'
+                ds_output.attrs['time zone'] = 'UTC'
                 return ds_output # return precipitation prediction in mm/h
         else:
             return result * 6 # return precipitation prediction in mm/h

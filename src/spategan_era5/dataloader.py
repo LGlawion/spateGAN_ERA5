@@ -126,22 +126,15 @@ def normalize_longitude(
     lon_min = np.nanmin(lons)
     lon_max = np.nanmax(lons)
     
-    print(f"Input longitude range: {lon_min:.2f} to {lon_max:.2f}")
-    
     if lon_min < 0:
         # Contains negative values -> must be -180..180
         is_0_360 = False
-        print("Auto-detected: -180..180 (negative values present)")
-    
     elif lon_max > 180:
         # Values exceed 180 -> must be 0..360
         is_0_360 = True
-        print("Auto-detected: 0..360 (values > 180 present)")
-    
     else:
         # Ambiguous range, assume -180..180
         is_0_360 = False
-        print("Longitude range between 0 and 180")
     
     # Convert if needed
     if is_0_360:
@@ -149,13 +142,10 @@ def normalize_longitude(
         new_lons = np.where(lons > 180, lons - 360, lons)
         ds = ds.assign_coords(lon=new_lons)
         ds = ds.sortby('lon')
-        print(f"Converted 0..360 to -180..180")
-        print(f"Output longitude range: {ds['lon'].values.min():.2f} to {ds['lon'].values.max():.2f}")
     else:
         # Already -180..180, just ensure sorted
         if not np.all(np.diff(lons) > 0):
             ds = ds.sortby('lon')
-            print("Sorted longitude coordinates")
     
     return ds
 

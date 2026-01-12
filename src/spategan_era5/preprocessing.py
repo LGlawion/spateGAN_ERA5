@@ -48,7 +48,41 @@ def validate_patch_extraction(
     half_patch_km = patch_size_km / 2.0
     required_radius_km = half_patch_km + patch_padding_km
     
-    # Check latitude coverage
+    errors = []
+    
+    # First check if center is within data domain
+    if not (lat_south <= center_lat <= lat_north):
+        errors.append(f"Center latitude {center_lat:.2f}° is outside data range [{lat_south:.2f}°, {lat_north:.2f}°]")
+    
+    # For longitude, handle wraparound for global data
+    # Normalize to same convention for comparison
+    center_lon_norm = ((center_lon + 180) % 360) - 180
+    lon_west_norm = ((lon_west + 180) % 360) - 180
+    lon_east_norm = ((lon_east + 180) % 360) - 180
+    
+    # Check if it's global longitude data
+    is_global_lon = abs(lon_east - lon_west) > 350
+    
+    if not is_global_lon:
+        # Regional data: center must be within bounds
+        if lon_west_norm <= lon_east_norm:
+            # Normal case
+            if not (lon_west_norm <= center_lon_norm <= lon_east_norm):
+                errors.append(f"Center longitude {center_lon:.2f}° is outside data range [{lon_west:.2f}°, {lon_east:.2f}°]")
+        else:
+            # Wraps around 180° meridian
+            if not (center_lon_norm >= lon_west_norm or center_lon_norm <= lon_east_norm):
+                errors.append(f"Center longitude {center_lon:.2f}° is outside data range [{lon_west:.2f}°, {lon_east:.2f}°]")
+    
+    if center_lon > 180:
+        errors.append(f"Center longitude {center_lon:.2f}° exceeds 180°. Please use -180 to 180 range.")
+    
+    # If center is outside data, fail immediately
+    if errors:
+        error_msg = "Cannot extract patch:\n  " + "\n  ".join(errors)
+        raise ValueError(error_msg)
+    
+    # Check distance coverage from center to data boundaries
     lat_distance_south = haversine(center_lat, 0, lat_south, 0)
     lat_distance_north = haversine(center_lat, 0, lat_north, 0)
     
@@ -56,17 +90,7 @@ def validate_patch_extraction(
     lon_distance_west = haversine(center_lat, center_lon, center_lat, lon_west)
     lon_distance_east = haversine(center_lat, center_lon, center_lat, lon_east)
     
-    print(f"Patch Extraction Validation:")
-    print(f"  Center: ({center_lat:.4f}°N, {center_lon:.4f}°E)")
-    print(f"  Required radius: {required_radius_km:.2f} km")
-    print(f"  Latitude coverage: {lat_distance_south:.2f} km south, {lat_distance_north:.2f} km north (required: {required_radius_km:.2f} km each)")
-    print(f"  Longitude coverage: {lon_distance_west:.2f} km west, {lon_distance_east:.2f} km east (required: {required_radius_km:.2f} km each)")
-    
-    if abs(center_lat) > 63:
-        print("  Note: High latitude detected, ERA5 patch will spann across UTM zones might leading to distorions.")
-    
-    
-    errors = []
+    # Validate coverage
     if lat_distance_south < required_radius_km:
         errors.append(f"Insufficient coverage south: {lat_distance_south:.2f} km < {required_radius_km:.2f} km")
     if lat_distance_north < required_radius_km:
@@ -75,14 +99,12 @@ def validate_patch_extraction(
         errors.append(f"Insufficient coverage west: {lon_distance_west:.2f} km < {required_radius_km:.2f} km")
     if lon_distance_east < required_radius_km:
         errors.append(f"Insufficient coverage east: {lon_distance_east:.2f} km < {required_radius_km:.2f} km")
-    if center_lon > 180:
-        errors.append(f"Center longitude {center_lon:.2f}° exceeds 180°. Please use -180 to 180 range.")
     
     if errors:
         error_msg = "Cannot extract patch:\n  " + "\n  ".join(errors)
         raise ValueError(error_msg)
     
-    print(f"✓ Patch can be extracted successfully")
+    print(f"✓ Patch validated: center ({center_lat:.2f}°N, {center_lon:.2f}°E), radius {required_radius_km:.0f} km")
     
     return {
         "lat_distance_south": lat_distance_south,
@@ -244,19 +266,6 @@ def slice_data_for_projection(
         "is_global_data": is_global_lon,
     }
     
-    # Print extraction details
-    print(f"\nLatitude-Longitude Patch Extraction (Haversine-based):")
-    print(f"  Target: {target_domain_size_km} km domain")
-    print(f"  Latitude: spacing={lat_spacing_km:.2f} km → {lat_pixels_total} pixels total")
-    print(f"  Longitude: spacing={lon_spacing_km:.2f} km (at lat={center_lat:.2f}°) → {lon_pixels_total} pixels total")
-    print(f"  Center coordinates: ({center_lat:.4f}°, {center_lon:.4f}°)")
-    print(f"  Center indices: lat[{center_lat_idx}], lon[{center_lon_idx}]")
-    print(f"  Extracted lat range: {slicing_info['extracted_lat_range'][0]:.4f}° to {slicing_info['extracted_lat_range'][1]:.4f}°")
-    print(f"  Extracted lon range: {slicing_info['extracted_lon_range'][0]:.4f}° to {slicing_info['extracted_lon_range'][1]:.4f}°")
-    print(f"  Actual extracted shape: {slicing_info['extracted_shape']}")
-    if is_global_lon:
-        print(f"  Global data detected: longitude wrapping enabled")
-    
     return ds_sliced, slicing_info
 
 
@@ -307,7 +316,10 @@ def validate_time_dimension(ds: xr.Dataset, required_hours: int = 16) -> bool:
             f"Dataset has {n_time_steps} time steps but {required_hours} are required"
         )
     
-    print(f"Time validation: {n_time_steps} time steps available (required: {required_hours})")
+    # Warning for large datasets (>1 month ~ 720 hours)
+    if n_time_steps > 720:
+        print(f"⚠ Warning: Large dataset with {n_time_steps} time steps (~{n_time_steps/24:.1f} days) may cause memory issues")
+    
     return True
 
 

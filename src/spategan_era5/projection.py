@@ -75,11 +75,6 @@ def latlon_to_utm(ds_sliced, center_lat, center_lon, target_size, grid_spacing, 
     crs_latlon = CRS.from_epsg(4326)  # WGS84
     crs_utm = CRS.from_proj4(f"+proj=utm +zone={utm_zone} +{hemisphere} +datum=WGS84")
     
-    print(f"UTM Zone: {utm_zone}{' N' if hemisphere == 'north' else ' S'} (center_lon={center_lon})")
-    print(f"Target size: {target_size}x{target_size} pixels")
-    print(f"Grid spacing: {grid_spacing/1000:.2f} km")
-    print(f"Interpolation method: {method}")
-    
     # Create transformer
     transformer_to_utm = Transformer.from_crs(crs_latlon, crs_utm, always_xy=True)
     transformer_to_latlon = Transformer.from_crs(crs_utm, crs_latlon, always_xy=True)
@@ -95,7 +90,6 @@ def latlon_to_utm(ds_sliced, center_lat, center_lon, target_size, grid_spacing, 
     
     # Transform center point to UTM (center_lon already normalized)
     center_x, center_y = transformer_to_utm.transform(center_lon, center_lat)
-    print(f"Center in UTM: ({center_x:.2f}, {center_y:.2f}) meters")
     
     # Define target UTM grid (centered on center point)
     half_extent = (target_size * grid_spacing) / 2
@@ -114,8 +108,6 @@ def latlon_to_utm(ds_sliced, center_lat, center_lon, target_size, grid_spacing, 
     # Ensure exactly target_size pixels
     x_target = x_target[:target_size]
     y_target = y_target[:target_size]
-    
-    print(f"Target grid shape: ({len(y_target)}, {len(x_target)})")
     
     # Create target meshgrid
     x_target_grid, y_target_grid = np.meshgrid(x_target, y_target)
@@ -198,7 +190,11 @@ def latlon_to_utm(ds_sliced, center_lat, center_lon, target_size, grid_spacing, 
     ds_utm.y.attrs['units'] = 'meters'
     ds_utm.y.attrs['long_name'] = 'UTM northing'
     
-    print(f"Output UTM dataset shape: {ds_utm[data_vars[0]].shape}\n")
+    # Add units to precipitation variables
+    for var in data_vars:
+        if 'cp' in var.lower() or 'lsp' in var.lower() or 'precip' in var.lower():
+            ds_utm[var].attrs['units'] = 'mm/h'
+            ds_utm[var].attrs['long_name'] = 'precipitation'
     
     return ds_utm
 
@@ -249,8 +245,6 @@ def utm_to_latlon(ds_utm, target_lats=None, target_lons=None, resolution=None, m
     else:
         crs_utm = CRS.from_proj4(f"+proj=utm +zone={utm_zone} +{hemisphere} +datum=WGS84")
     
-    print(f"UTM Zone: {utm_zone}{' N' if hemisphere == 'north' else ' S'}")
-    
     # Create transformers
     transformer_to_latlon = Transformer.from_crs(crs_utm, crs_latlon, always_xy=True)
     transformer_to_utm = Transformer.from_crs(crs_latlon, crs_utm, always_xy=True)
@@ -258,8 +252,6 @@ def utm_to_latlon(ds_utm, target_lats=None, target_lons=None, resolution=None, m
     # Get UTM coordinates
     x_utm = ds_utm.x.values
     y_utm = ds_utm.y.values
-    
-    print(f"Input UTM grid shape: ({len(y_utm)}, {len(x_utm)})")
     
     # Transform all four corners and edges to get accurate lat/lon extent
     n_edge_points = 50
@@ -302,11 +294,6 @@ def utm_to_latlon(ds_utm, target_lats=None, target_lons=None, resolution=None, m
             target_lons = np.arange(lon_start, lon_end + resolution / 2, resolution)
             # Trim to actual extent
             target_lons = target_lons[(target_lons >= lon_min) & (target_lons <= lon_max)]
-    
-    print(f"Resolution: {resolution}°")
-    print(f"Target lat/lon grid shape: ({len(target_lats)}, {len(target_lons)})")
-    print(f"Lat range: {target_lats[0]:.4f}° to {target_lats[-1]:.4f}°")
-    print(f"Lon range: {target_lons[0]:.4f}° to {target_lons[-1]:.4f}°")
     
     # Create target lat/lon meshgrid
     lon_target, lat_target = np.meshgrid(target_lons, target_lats)
@@ -385,7 +372,11 @@ def utm_to_latlon(ds_utm, target_lats=None, target_lons=None, resolution=None, m
     ds_latlon.lon.attrs['units'] = 'degrees_east'
     ds_latlon.lon.attrs['long_name'] = 'longitude'
     
-    print(f"\nOutput lat/lon dataset shape: {ds_latlon[data_vars[0]].shape}")
+    # Add units to precipitation variables
+    for var in data_vars:
+        if 'precip' in var.lower():
+            ds_latlon[var].attrs['units'] = 'mm/h'
+            ds_latlon[var].attrs['long_name'] = 'precipitation'
     
     return ds_latlon
 
@@ -431,7 +422,7 @@ def prediction_output_dataset(ds):
     # Reindex to include the last 50 minutes
     ds_upsampled = ds_upsampled.reindex(time=times_new, method='ffill')
 
-        # Sanity check
+    # Sanity check
     n_times_new = len(ds_upsampled.time)
     expected_length = n_times_orig * 6
     
@@ -440,8 +431,5 @@ def prediction_output_dataset(ds):
             f"Length mismatch: new array has {n_times_new} steps, "
             f"expected {expected_length} (6 × {n_times_orig})"
         )
-    
-    print(f"Original time steps: {n_times_orig} - hr")
-    print(f"New time steps: {n_times_new} - 10 min")
     
     return ds_upsampled
