@@ -1,1 +1,70 @@
-*.pyc
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Type checking
+.mypy_cache/
+
+# Linting
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project-specific
+output/
+plots/*.png
+*.nc.bak
+
+# Large data files (keep tracked test data)
+*.nc
+!data/x_test.nc
+!data/y_test.nc
+
+# Model weights (track the default weights)
+!model_weights/model_weights.pt
+
+# Logs
+*.log
+logs/
+
+# todo list
+todo.md
+
+# Development notebook
+main.ipynb
+
+# Update tests first
+tests/
