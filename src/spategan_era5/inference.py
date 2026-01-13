@@ -1,28 +1,57 @@
-import torch
-import numpy as np
-from typing import Optional, Union
+"""
+Inference engine for spateGAN-ERA5 model.
 
+Provides the InferenceEngine class for running model predictions
+with sliding window inference.
+"""
+
+import numpy as np
+import torch
 
 class InferenceEngine:
-    def __init__(self, model: torch.nn.Module, sliding_step: int = 1, device: Optional[torch.device] = None):
+    """Inference engine for running spateGAN model predictions.
+    
+    Handles model loading, tensor conversion, and sliding window inference
+    for precipitation downscaling.
+    
+    Args:
+        model: PyTorch model for inference.
+        sliding_step: Step size for sliding window (default: 1).
+        device: Torch device to use (auto-detects CUDA if available).
+    """
+    
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        sliding_step: int = 1,
+        device: torch.device | None = None,
+    ) -> None:
         self.model = model
         self.sliding_step = sliding_step
         self.device = device or torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
         self.model.eval()
 
-    def _to_tensor(self, array: Union[np.ndarray, torch.Tensor]) -> torch.Tensor:
+    def _to_tensor(self, array: np.ndarray | torch.Tensor) -> torch.Tensor:
+        """Convert numpy array or tensor to device tensor.
+        
+        Args:
+            array: Input array or tensor.
+            
+        Returns:
+            Tensor on the configured device.
+        """
         if isinstance(array, np.ndarray):
             array = torch.from_numpy(array).float()
         return array.to(self.device)
 
     def infer(
         self,
-        x: Union[np.ndarray, torch.Tensor],
-        target: Optional[Union[np.ndarray, torch.Tensor]] = None,
+        x: np.ndarray | torch.Tensor,
+        target: np.ndarray | torch.Tensor | None = None,
         seed: int = 1,
-        return_numpy: bool = True
-    ) -> Union[tuple, np.ndarray, torch.Tensor]:
+        return_numpy: bool = True,
+    ) -> tuple[np.ndarray, ...] | np.ndarray | torch.Tensor:
         """
         Run inference with sliding windows over time.
 

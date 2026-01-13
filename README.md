@@ -16,12 +16,20 @@
 - **Uncertainty Quantification**  
   Generates diverse ensembles of precipitation scenarios.
 
+- **User-Defined Inference**
+  Run spateGAN-ERA5 on custom regions and time periods using your own ERA5 netCDF files via a simple configuration-driven workflow.
+
 ---
 
 ### Datasets
 
 Training, model selection and evaluation datasets are available at https://doi.org/10.5281/zenodo.17417589
 
+To run the model for downscaling precipitation data in inference, ERA5 data in hourly resolution can be downloaded
+[here](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels?tab=download)
+as a netCDF file.
+The variables "Convective precipitation" and "Large scale precipitation", a minimal spatial extent of 672kmx672km and a minimal time sequence of 16 hrs are required.
+ 
 ---
 
 ### Getting Started
@@ -43,21 +51,22 @@ uv sync #creates .venv
 ```
 use `spateGAN_ERA5/.venv/bin/python3` as your interpreter
 
+#### Downscaling
+Update ```config.yaml``` to your downscaling domain (defined as centre lat lon coordinates), input path of ERA5 netCDF and output path.
 
-#### Example: Downscaling Over Germany
+Run
+```bash
+uv run main.py
+``` 
+High resolution precipitation fields are saved in UTM projection (2km, 10min resolution) and lat lon (0.018° and 10min resolution).
 
-A demonstration notebook is included in the repo:
+#### Probabilistic downscaling
+For probabilistic downscaling ```seed``` and ```slide```parameter in ```config.yaml```can be changed.
 
-downscaling.ipynb — uses a small sample dataset to show how to apply spateGAN-ERA5 for downscaling ERA5 precipitation over Germany.
+#### Evaluation example
+As an evaluation example, a notebook is included in the repo:
 
-The notebook includes:
-
-- Loading preprocessed ERA5 input samples
-
-- Running the pre-trained spateGAN-ERA5 model
-
-- Visualizing and comparison of high-resolution rain field predictions to rainfall observations
-
+downscaling.ipynb (and downscaling_example.py) — uses a small sample dataset to show spateGAN-ERA5 for downscaling ERA5 precipitation over Germany and compare it to radar observations.
 
 
 ### License and co

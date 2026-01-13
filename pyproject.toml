@@ -1,25 +1,128 @@
 [project]
 name = "spategan-era5"
 version = "0.1.0"
-description = "Add your description here"
+description = "spateGAN-ERA5: Deep learning framework for ERA5 precipitation downscaling from 24km/1hr to 2km/10min"
 readme = "README.md"
+license = {text = "MIT"}
 authors = [
-    { name = "julius.polz", email = "julius.polz@kit.edu" }
+    { name = "Luca Glawion" },
+    { name = "Julius Polz", email = "julius.polz@kit.edu" },
 ]
-requires-python = ">=3.12"
+keywords = ["deep-learning", "precipitation", "downscaling", "ERA5", "GAN", "weather"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
+requires-python = ">=3.10"
 dependencies = [
-    "numpy",
-    "xarray",
-    "netcdf4",
-    "einops",
-    "matplotlib",
-    "torch==2.6.0",
+    "numpy>=1.24.0",
+    "xarray>=2023.0.0",
+    "netcdf4>=1.6.0",
+    "einops>=0.6.0",
+    "matplotlib>=3.7.0",
+    "torch>=2.0.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.65.0",
+    "scipy>=1.10.0",
+    "pyproj>=3.5.0",
+    "pandas>=2.0.0",
     "ipykernel",
+    "pytest"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+    "ipykernel>=6.0.0",
 ]
 
 [project.scripts]
-spategan-era5 = "spategan_era5:main"
+spategan-era5 = "spategan_era5.main:main"
+
+[project.urls]
+Homepage = "https://github.com/LGlawion/spateGAN_ERA5"
+Documentation = "https://github.com/LGlawion/spateGAN_ERA5#readme"
+Repository = "https://github.com/LGlawion/spateGAN_ERA5"
+Issues = "https://github.com/LGlawion/spateGAN_ERA5/issues"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spategan_era5"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "-ra",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "gpu: marks tests that require GPU",
+]
+
+[tool.coverage.run]
+source = ["src/spategan_era5"]
+branch = true
+omit = ["*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+show_missing = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "W",    # pycodestyle warnings
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "SIM",  # flake8-simplify
+    "PTH",  # flake8-use-pathlib
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # function call in default argument
+    "SIM108", # ternary instead of if-else
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["spategan_era5"]
+force-single-line = false
+lines-after-imports = 2
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+exclude = ["tests/", "build/", "dist/"]
