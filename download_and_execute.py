@@ -88,4 +88,5 @@ def execute_downscaling(input_file: Path):
 if __name__ == "__main__":
     processed_file = prepare_ecmwf_data(AIFS_OUT_DIR)
 
+    # download_era5_cds(ERA5_TARGET_PATH)
     execute_downscaling(processed_file)
