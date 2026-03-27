@@ -52,6 +52,7 @@ plots/*.png
 *.nc
 !data/x_test.nc
 !data/y_test.nc
+data/
 
 # Model weights (track the default weights)
 !model_weights/model_weights.pt
